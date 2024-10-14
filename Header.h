@@ -2,41 +2,27 @@ using namespace std;
 struct Link {
 	float val;
 	Link* next;
+	Link* prev;
 };
 
 struct List {
 	Link* first;
 	Link* last;
 	List() :first(nullptr), last(nullptr) {}
-	
-	bool is_empty() { return first == nullptr; }
-	
-	//Очищення
-	void clear() {
-		if (this->is_empty()) {
-			cout << "Список порожній!\n";
-		}
-		else {
-			while (!is_empty()) {
-				Link* temp = first;
-				first = first->next;
-				delete temp;
-			}
-			last = nullptr;
-		}
-	}
 
-	void make_List(int n) {	
+	bool is_empty() { return first == nullptr; }
+
+	void make_List(int n) {
 		if (n < 1) {
 			cout << "Кількість елементів не може бути менше 1\n";
 		}
 		else {
-			clear();
 			while (n > 0) {
 				Link* temp = new Link;
 				cout << "Введіть значення: ";
 				cin >> temp->val;
 				temp->next = nullptr;
+				temp->prev = last;
 				if (this->is_empty()) {
 					first = last = temp;
 				}
@@ -44,16 +30,18 @@ struct List {
 				{
 					last->next = temp;
 					last = temp;
+					
 				}
 				n--;
 			}
 		}
 	}
-	
+
 	void push_back(float x) {
 		Link* temp = new Link;
 		temp->val = x;
 		temp->next = nullptr;
+		temp->prev = last;
 		if (this->is_empty())
 			first = last = temp;
 		else
@@ -62,46 +50,57 @@ struct List {
 			last = temp;
 		}
 	}
-	
+
 	void push_front(float x) {
 		Link* temp = new Link;
 		temp->val = x;
 		temp->next = first;
+		temp->prev = nullptr;
 		if (this->is_empty()) {
 			temp->next = nullptr;
 			last = first = temp;
 		}
-		else first = temp;
+		else {
+			first->prev = temp;
+			first = temp;
+		}
 	}
-	
+
 	void pop_back() {
 		if (is_empty()) {
-			cout << "Список порожній!\n";
+			cout << "Список порожній!";
+			return;
 		}
-		else {
-			Link* temp = first;
-			while (temp->next != last) {
-				temp = temp->next;
-			}
-			delete last;
-			last = temp;
+		Link* temp = last;
+		last = last->prev;
+		if (last != nullptr) {
 			last->next = nullptr;
 		}
+		else {
+			first = nullptr;
+		}
+		delete temp;
 	}
-	
+
 	void pop_front() {
 		if (is_empty()) {
-			cout << "Список порожній!\n";
+			cout << "Список порожній!";
+			return;
+		}
+		Link* temp = first;
+		first = first->next;
+		if (first != nullptr) {
+			first->prev = nullptr;
 		}
 		else {
-			Link* temp = first;
-			first = first->next;
-			delete temp;
+			last = nullptr;
 		}
+		delete temp;
 	}
+
 	void display() {
 		if (is_empty()) {
-			cout << "Список порожній!\n";
+			cout << "Список порожній!";
 		}
 		else {
 			Link* temp = first;
@@ -111,6 +110,12 @@ struct List {
 				temp = temp->next;
 			}
 			cout << endl;
+		}
+	}
+	//Очищення
+	void clear() {
+		while (!is_empty()) {
+			pop_front();
 		}
 	}
 	//Кількість елементів
@@ -130,10 +135,8 @@ struct List {
 			return;
 		}
 		Link* temp = first;
-		Link* prev = nullptr;
 		// Пошук елемента
 		while (temp != nullptr && temp->val != x) {
-			prev = temp;
 			temp = temp->next;
 		}
 		if (temp == nullptr) {
@@ -142,18 +145,15 @@ struct List {
 		}
 		// Видалення першого елемента
 		if (temp == first) {
-			first = first->next;
-			if (first == nullptr) {
-				last = nullptr;
-			}
-			delete temp;
+			pop_front();
+		}
+		else if (temp == last) {
+			pop_back();
 		}
 		// Видалення елемента в середині або кінці списку
 		else {
-			prev->next = temp->next;
-			if (temp == last) { 
-				last = prev;
-			}
+			temp->prev->next = temp->next;
+			temp->next->prev = temp->prev;
 			delete temp;
 		}
 		cout << "Елемент видалено!\n";
@@ -161,7 +161,7 @@ struct List {
 
 	void swap_el(float x, float y) {
 		if (x == y) {
-			cout << "Обрані елементи однакові, немає сенсу міняти місцями.\n";
+			cout << "Обрані елементи однакові, немає сенсу міняти місцями\n";
 			return;
 		}
 		Link* X = first;
@@ -196,7 +196,6 @@ struct List {
 			fout << temp->val << endl;
 			temp = temp->next;
 		}
-
 		fout.close();
 		cout << "Дані успішно записано у файл " << filename << endl;
 	}
